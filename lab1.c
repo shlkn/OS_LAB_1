@@ -34,7 +34,7 @@ int main()
 {
 printf("Directory scan of /home\n");\
 printdir("/home", 0);
-printf("done");
+printf("done\n");
 return 1;
 }
 
