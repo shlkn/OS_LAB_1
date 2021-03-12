@@ -1,3 +1,4 @@
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -31,6 +32,7 @@ int main(int argc, char* argv[])
 			unpack(optarg);
 			break;
 		}
+		break;
 	}
 	return 1;
 }
@@ -72,16 +74,25 @@ void pack_creation(char *file_names_arr[], int arg_cnt, int start_index)
 		close(file);
 		file_cnt++;
 	}
-	close(arch);
 	lseek(arch, SEEK_SET, 0);
 	write(arch, &file_cnt, sizeof(int));
+	close(arch);
 }
 
 void unpack(char *file_name)
 {
-	int arch, file_cnt;
-	if(arch = open(file_name, O_RDONLY) == -1)
+	int arch, file_cnt = 0;
+	if((arch = open(file_name, O_RDONLY)) == -1)
+	{
 		printf("Error, can`t open archive file\n");
+		return;
+	}
 	read(arch, &file_cnt, sizeof(int));
 	printf("%d\n", file_cnt);
+	struct file_discriptor all_desc[file_cnt];
+	for(int i = 0; i < file_cnt; i++)
+	{
+		read(arch, &all_desc[i], sizeof(struct file_discriptor));
+		printf("file name - %s file size - %ld\n", all_desc[i].fl_name, all_desc[i].fl_sz);
+	}
 }
