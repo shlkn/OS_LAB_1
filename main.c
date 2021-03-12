@@ -55,8 +55,6 @@ void pack_creation(char *file_names_arr[], int arg_cnt, int start_index)
 		{
 			fl_dscp.fl_sz = fl_stat.st_size;   
 			strcpy(fl_dscp.fl_name, file_names_arr[i]);
-			//printf("%ld\n", fl_dscp.fl_sz);
-			//printf("%s\n", fl_dscp.fl_name);
 			write(arch, &fl_dscp, sizeof(struct file_discriptor));
 		}
 		else if(S_ISDIR(fl_stat.st_mode))
@@ -64,13 +62,19 @@ void pack_creation(char *file_names_arr[], int arg_cnt, int start_index)
 			continue; //do something
 		}
 	} //записали дискриптор для каждого файла
+
+
+
 	for(int i = start_index; i < arg_cnt; i++)
 	{
 		int nread;
 		if((file = open(file_names_arr[i], O_RDONLY, S_IRUSR | S_IWUSR)) == -1)
 			printf("Error, can`t open destination file\n");
-		while(nread = read(file, &buff, sizeof(buff)) > 0)
+		while((nread = read(file, &buff, sizeof(buff))) > 0)
+		{
 			write(arch, buff, nread);
+			printf("%s", buff);
+		}
 		close(file);
 		file_cnt++;
 	}
@@ -88,17 +92,19 @@ void unpack(char *file_name)
 		return;
 	}
 	read(arch, &file_cnt, sizeof(int));
-	printf("%d\n", file_cnt);
 	struct file_discriptor all_desc[file_cnt];
-	char* buff;
 	for(int i = 0; i < file_cnt; i++)
 	{
 		read(arch, &all_desc[i], sizeof(struct file_discriptor));
 		printf("file name - %s file size - %ld\n", all_desc[i].fl_name, all_desc[i].fl_sz);
+
+	}
+	for(int i = 0; i < file_cnt; i++) // создание и распаковка файлов 
+	{
 		if((file = open(all_desc[i].fl_name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) == -1)
 			printf("Error, can`t create destination file \n");
-		buff = (char*) malloc(sizeof(char) * all_desc[i].fl_sz);
-		printf("%ld\n", sizeof(char) * all_desc[i].fl_sz);
-		//write(file, &buff, sizeof(buff));
+		char buff[all_desc[i].fl_sz];
+		read(arch, &buff, sizeof(buff));
+		write(file, &buff, sizeof(buff));
 	}
 }
