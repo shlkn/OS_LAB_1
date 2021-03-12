@@ -106,5 +106,6 @@ void unpack(char *file_name)
 		char buff[all_desc[i].fl_sz];
 		read(arch, &buff, sizeof(buff));
 		write(file, &buff, sizeof(buff));
+		//need to perform dir
 	}
 }
