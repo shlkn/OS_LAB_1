@@ -81,7 +81,7 @@ void pack_creation(char *file_names_arr[], int arg_cnt, int start_index)
 
 void unpack(char *file_name)
 {
-	int arch, file_cnt = 0;
+	int arch, file_cnt = 0, file;
 	if((arch = open(file_name, O_RDONLY)) == -1)
 	{
 		printf("Error, can`t open archive file\n");
@@ -90,9 +90,15 @@ void unpack(char *file_name)
 	read(arch, &file_cnt, sizeof(int));
 	printf("%d\n", file_cnt);
 	struct file_discriptor all_desc[file_cnt];
+	char* buff;
 	for(int i = 0; i < file_cnt; i++)
 	{
 		read(arch, &all_desc[i], sizeof(struct file_discriptor));
 		printf("file name - %s file size - %ld\n", all_desc[i].fl_name, all_desc[i].fl_sz);
+		if((file = open(all_desc[i].fl_name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) == -1)
+			printf("Error, can`t create destination file \n");
+		buff = (char*) malloc(sizeof(char) * all_desc[i].fl_sz);
+		printf("%ld\n", sizeof(char) * all_desc[i].fl_sz);
+		//write(file, &buff, sizeof(buff));
 	}
 }
