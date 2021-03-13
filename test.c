@@ -91,9 +91,63 @@ void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
 		}
 	}
 }
-void copy_data()
+void copy_file(int arch, char *file_name)
 {
-
+	int nread, file;
+	char buff[1024];
+	printf("Copy in archive. file name - %s\n", file_name);
+	if((file = open(file_name, O_RDONLY, S_IRUSR | S_IWUSR)) == -1)
+	{
+		printf("Error, can`t open destination file\n");
+	}
+	while((nread = read(file, &buff, sizeof(buff))) > 0)
+	{
+		write(arch, buff, nread);
+		//printf("%s", buff);
+	}
+	close(file);
+	return;
+}
+void copy_data(int arch, char *path)
+{
+	DIR *dp;
+	struct dirent *cr_dir;
+	dp = opendir(path);
+	if(dp == NULL) 
+	{
+		printf("Error can`t open dir\n");
+		return;
+	}
+	while(1)
+	{
+		cr_dir = readdir(dp);
+		if(cr_dir == NULL)
+		{
+			printf("empty\n");
+			return;
+		}
+		if(strcmp(cr_dir->d_name, ".") == 0 || strcmp(cr_dir->d_name, "..") == 0)
+			continue; 
+		printf("cr dir %s\n", cr_dir->d_name);
+		if(cr_dir->d_type == 8) // если просто файл
+		{
+			char buff[1024];
+			strcpy(buff, path);
+			strcat(buff, "/");
+			strcat(buff, cr_dir->d_name);
+			copy_file(arch, buff);
+		}
+		else if(cr_dir->d_type == 4) // если директория
+		{	
+			char full_path[100];
+			strcpy(full_path, path);
+			strcat(full_path, "/");
+			strcat(full_path, cr_dir->d_name);
+			printf("dir - %s\n", path);
+			//printf("%d\n", dir_desc.id);
+			copy_data(arch, full_path);
+		}
+	}
 }
 void pack(char *file_names_arr[], int arg_cnt, int start_index)
 {
@@ -117,6 +171,22 @@ void pack(char *file_names_arr[], int arg_cnt, int start_index)
 			handle_dir(arch, &file_cnt, path, file_names_arr[i], -1);//составили и записали дискрипторы для дерикторий и файлов
 		}
 	} 
+
+
+	for(int i = start_index; i < arg_cnt; i++)
+	{
+		lstat(file_names_arr[i], &fl_stat);
+		if(S_ISREG(fl_stat.st_mode))
+		{
+			copy_file(arch, file_names_arr[i]);
+		}
+		else if(S_ISDIR(fl_stat.st_mode))
+		{
+			char path[100];
+			strcpy(path, file_names_arr[i]);
+			copy_data(arch, path);
+		}
+	} 
 	// необходимо придумать алгоритм запаковки файлов
 	//записали дискриптор для каждого файла
 	/*char buff[1024];
@@ -138,9 +208,22 @@ void pack(char *file_names_arr[], int arg_cnt, int start_index)
 	write(arch, &file_cnt, sizeof(int));
 	close(arch);
 }
-void unpack()
+void unpack(char *file_name)
 {
-
+	int arch, file_cnt = 0, file;
+	if((arch = open(file_name, O_RDONLY)) == -1)
+	{
+		printf("Error, can`t open archive file\n");
+		return;
+	}
+	read(arch, &file_cnt, sizeof(int));
+	printf("%d\n", file_cnt);
+	struct file_descriptor all_desc[file_cnt];
+	for(int i = 0; i < file_cnt; i++)
+	{
+		read(arch, &all_desc[i], sizeof(struct file_descriptor));
+		printf("file name - %s file size - %ld\n", all_desc[i].fl_name, all_desc[i].fl_sz);
+	}
 }
 int main(int argc, char* argv[])
 {
