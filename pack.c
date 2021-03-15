@@ -36,6 +36,7 @@ void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
 	(*file_cnt)++;
 	while((cr_dir = readdir(dp)) != NULL) // handle only files
 		if(cr_dir->d_type == 8) // is regular file?
+		{
 			char full_path[100];
 			strcpy(full_path, path);
 			strcat(full_path, "/");
@@ -59,7 +60,7 @@ void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
 			strcpy(full_path, path);
 			strcat(full_path, "/");
 			strcat(full_path, cr_dir->d_name);
-			handle_dir(arch, file_cnt, full_path, cr_dir->d_name, dir_desc.id);
+			handle_dir(arch, file_cnt, full_path, cr_dir->d_name, dir_desc.id); // recusive call of this function
 		}
 	}
 	closedir(dp);
@@ -113,7 +114,7 @@ void copy_data(int arch, char *path)
 			strcpy(full_path, path);
 			strcat(full_path, "/");
 			strcat(full_path, cr_dir->d_name);
-			copy_data(arch, full_path);
+			copy_data(arch, full_path); // recusive call of this function
 		}
 	}
 	closedir(dp);
