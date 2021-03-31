@@ -12,7 +12,6 @@ void handle_file(int arch, int *file_cnt, char *path, char *file_name, int pr_id
 	fl_desc.pr_id = pr_id; // writing parents id
 	(*file_cnt)++;
 	write(arch, &fl_desc, sizeof(struct file_descriptor));
-	return;
 }
 
 void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
@@ -24,7 +23,7 @@ void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open dir\n");
-		return;
+		exit(-1);
 	}
 	int file, cr_pr_id = pr_id;
 	dir_desc.is_reg = 0; // type - dir
@@ -48,7 +47,7 @@ void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open directory\n");
-		return;
+		exit(-1);
 	}
 	while((cr_dir = readdir(dp)) != NULL) // handle only directory
 	{
@@ -75,7 +74,6 @@ void copy_file(int arch, char *file_name)
 	while((nread = read(file, &buff, sizeof(buff))) > 0)
 		write(arch, buff, nread);
 	close(file);
-	return;
 }
 
 void copy_data(int arch, char *path)
@@ -86,7 +84,7 @@ void copy_data(int arch, char *path)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open directory\n");
-		return;
+		exit(-1);
 	}
 	while((cr_dir = readdir(dp)) != NULL) // handle only files
 		if(cr_dir->d_type == 8) // is regular file?
@@ -102,7 +100,7 @@ void copy_data(int arch, char *path)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open dir\n");
-		return;
+		exit(-1);
 	}
 	while((cr_dir = readdir(dp)) != NULL) // handle only directory
 	{
