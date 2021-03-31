@@ -24,7 +24,7 @@ void unpack(char *file_name)
 	if((arch = open(file_name, O_RDONLY)) == -1)
 	{
 		printf("Error, can`t open archive file\n");
-		return;
+		exit(-1);
 	}
 	read(arch, &file_cnt, sizeof(int)); // reading count of struct in archive
 	struct unpack_file_descriptor fl_desc[file_cnt];

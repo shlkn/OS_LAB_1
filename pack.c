@@ -12,7 +12,6 @@ void handle_file(int arch, int *file_cnt, char *path, char *file_name, int pr_id
 	fl_desc.pr_id = pr_id; // writing parents id
 	(*file_cnt)++;
 	write(arch, &fl_desc, sizeof(struct file_descriptor));
-	return;
 }
 
 void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
@@ -24,7 +23,7 @@ void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open dir\n");
-		return;
+		exit(-1);
 	}
 	int file, cr_pr_id = pr_id;
 	dir_desc.is_reg = 0; // type - dir
@@ -48,7 +47,7 @@ void handle_dir(int arch, int *file_cnt, char *path, char *dir_name, int pr_id)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open directory\n");
-		return;
+		exit(-1);
 	}
 	while((cr_dir = readdir(dp)) != NULL) // handle only directory
 	{
@@ -75,7 +74,6 @@ void copy_file(int arch, char *file_name)
 	while((nread = read(file, &buff, sizeof(buff))) > 0)
 		write(arch, buff, nread);
 	close(file);
-	return;
 }
 
 void copy_data(int arch, char *path)
@@ -86,7 +84,7 @@ void copy_data(int arch, char *path)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open directory\n");
-		return;
+		exit(-1);
 	}
 	while((cr_dir = readdir(dp)) != NULL) // handle only files
 		if(cr_dir->d_type == 8) // is regular file?
@@ -102,7 +100,7 @@ void copy_data(int arch, char *path)
 	if(dp == NULL) 
 	{
 		printf("Error can`t open dir\n");
-		return;
+		exit(-1);
 	}
 	while((cr_dir = readdir(dp)) != NULL) // handle only directory
 	{
@@ -122,12 +120,20 @@ void copy_data(int arch, char *path)
 
 void pack(char *file_names_arr[], int arg_cnt, int start_index)
 {
-	struct stat fl_stat;
-	int arch;
-	int file_cnt = 0; //count of struct
-	if((arch = open("my_arch", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) == -1) // open or create file for archive
-		printf("Error, can`t create archive file \n");
+	int chs, arch, file_cnt = 0;
+	printf("how should to name arhive?\n1 - enter file name\n2 - default name 'my_arch'\n");
+	scanf("%d", &chs);
+	char arch_name[256];
+	if(chs == 1)
+	{
+		printf("Waiting file name...\n");
+		scanf("%s", arch_name);
+		arch = open(arch_name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);// open or create file for archive
+	}
+	else printf("Selected default archive name\n");
+	arch = open("my_arch", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
 	write(arch, &file_cnt, sizeof(int)); // writes in archive count of files. in the end function this variable will be rewritten
+	struct stat fl_stat;
 	for(int i = start_index; i < arg_cnt; i++) // cycle only for regular files
 	{
 		lstat(file_names_arr[i], &fl_stat);
@@ -144,6 +150,11 @@ void pack(char *file_names_arr[], int arg_cnt, int start_index)
 			strcpy(path, file_names_arr[i]);
 			handle_dir(arch, &file_cnt, path, file_names_arr[i], -1);
 		}else continue;
+	}
+	if(file_cnt == 0)
+	{
+		printf("Error, can`t find files\n");
+		exit(-1);
 	}
 	// made headers and wrote it in archive
 	// starting to copy data in archive out of files
